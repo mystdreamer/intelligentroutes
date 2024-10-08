@@ -1,0 +1,156 @@
+{
+    "num_coords": 17,
+    "coordinates": [
+        {
+            "point": "start/end",
+            "latitude": -25.0,
+            "longitude": 133.0,
+            "color": "red"
+        },
+        {
+            "latitude": -28.272870058406248,
+            "longitude": 119.83991227190683
+        },
+        {
+            "latitude": -18.326310958782184,
+            "longitude": 133.72921119675024
+        },
+        {
+            "latitude": -25.839580016190215,
+            "longitude": 116.43760876947528
+        },
+        {
+            "latitude": -24.254464338509813,
+            "longitude": 144.8367200159562
+        },
+        {
+            "latitude": -33.66127247965282,
+            "longitude": 117.05145365053535
+        },
+        {
+            "latitude": -22.024624342645662,
+            "longitude": 147.87398148442435
+        },
+        {
+            "latitude": -22.35461868756301,
+            "longitude": 139.7329835272995
+        },
+        {
+            "latitude": -34.93816936086672,
+            "longitude": 146.88094876024587
+        },
+        {
+            "latitude": -20.501572669367565,
+            "longitude": 139.84556332860896
+        },
+        {
+            "latitude": -23.40036110802252,
+            "longitude": 117.92202236325313
+        },
+        {
+            "latitude": -27.751060801580014,
+            "longitude": 148.40660942281787
+        },
+        {
+            "latitude": -12.088521509269594,
+            "longitude": 133.92141933814221
+        },
+        {
+            "latitude": -15.85855222486013,
+            "longitude": 130.17732614880927
+        },
+        {
+            "latitude": -25.862563512348807,
+            "longitude": 152.91851872662428
+        },
+        {
+            "latitude": -16.76747828600201,
+            "longitude": 142.54339337959644
+        },
+        {
+            "latitude": -30.616994649354417,
+            "longitude": 129.35003606642584
+        },
+        {
+            "latitude": -37.85973528182672,
+            "longitude": 146.78338455687106
+        }
+    ],
+    "convex_hull": [
+        {
+            "latitude": -10.6871474,
+            "longitude": 142.5315554,
+            "color": "blue"
+        },
+        {
+            "latitude": -10.687187,
+            "longitude": 142.5316444,
+            "color": "blue"
+        },
+        {
+            "latitude": -22.4460593,
+            "longitude": 150.7536412,
+            "color": "blue"
+        },
+        {
+            "latitude": -25.2762852,
+            "longitude": 152.9081745,
+            "color": "blue"
+        },
+        {
+            "latitude": -28.6333542,
+            "longitude": 153.6385685,
+            "color": "blue"
+        },
+        {
+            "latitude": -37.50459,
+            "longitude": 149.977292,
+            "color": "blue"
+        },
+        {
+            "latitude": -39.1367387,
+            "longitude": 146.3738349,
+            "color": "blue"
+        },
+        {
+            "latitude": -35.4937,
+            "longitude": 138.7134,
+            "color": "blue"
+        },
+        {
+            "latitude": -31.8016,
+            "longitude": 129.5508,
+            "color": "blue"
+        },
+        {
+            "latitude": -33.6101,
+            "longitude": 123.3545,
+            "color": "blue"
+        },
+        {
+            "latitude": -34.842463,
+            "longitude": 116.002258,
+            "color": "blue"
+        },
+        {
+            "latitude": -26.1522827,
+            "longitude": 113.1560635,
+            "color": "blue"
+        },
+        {
+            "latitude": -22.5776932,
+            "longitude": 113.6537093,
+            "color": "blue"
+        },
+        {
+            "latitude": -21.9737528,
+            "longitude": 113.9335147,
+            "color": "blue"
+        },
+        {
+            "latitude": -11.12937,
+            "longitude": 131.9751,
+            "color": "blue"
+        }
+    ]
+}
