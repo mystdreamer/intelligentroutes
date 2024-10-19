@@ -1,5 +1,38 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import json
+import math
+
+def haversine_distance(coord1, coord2):
+    """
+    Calculate the Haversine distance between two points (latitude, longitude).
+    The result is in kilometers.
+    """
+    # Radius of Earth in kilometers
+    R = 6371.0
+
+    # Unpack latitude/longitude of both coordinates
+    lat1, lon1 = coord1
+    lat2, lon2 = coord2
+
+    # Convert latitude and longitude from degrees to radians
+    lat1_rad = math.radians(lat1)
+    lon1_rad = math.radians(lon1)
+    lat2_rad = math.radians(lat2)
+    lon2_rad = math.radians(lon2)
+
+    # Compute differences
+    dlat = lat2_rad - lat1_rad
+    dlon = lon2_rad - lon1_rad
+
+    # Haversine formula
+    a = math.sin(dlat / 2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    # Distance in kilometers
+    distance = R * c
+
+    return distance
 
 def calculate_distance_matrix(customers):
     n = len(customers)
@@ -7,6 +40,21 @@ def calculate_distance_matrix(customers):
     for i in range(n):
         for j in range(n):
             dist_matrix[i][j] = np.sqrt((customers[i][0] - customers[j][0])**2 + (customers[i][1] - customers[j][1])**2)
+    return dist_matrix
+
+def calculate_distance_matrix_2(customers):
+    """
+    Calculate the distance matrix using the Haversine formula for real-world coordinates.
+    """
+    n = len(customers)
+    dist_matrix = [[0.0] * n for _ in range(n)]
+
+    for i in range(n):
+        for j in range(i, n):
+            if i != j:
+                dist_matrix[i][j] = haversine_distance(customers[i], customers[j])
+                dist_matrix[j][i] = dist_matrix[i][j]  # Distance is symmetric
+
     return dist_matrix
 
 def greedy_vrp_solver_with_time_windows(customers, vehicle_capacity, max_distance, demands, time_windows, service_time, dist_matrix, num_vehicles, depot=0):
@@ -122,25 +170,44 @@ def visualize_routes(customers, demands, routes, dist_matrix):
     # Show the plot
     plt.show()
 
+def read_json_data(json_file):
+    """
+    Function to read customer, demand, and time window data from a JSON file.
+    """
+    with open(json_file, 'r') as file:
+        data = json.load(file)
+    
+    # Extracting the lists from the JSON data
+    customers = data.get("customers", [])
+    demands = data.get("demands", [])
+    time_windows = data.get("time_windows", [])
+
+    # Returning the structured data
+    return customers, demands, time_windows
 
 
-# New set of customer locations (x, y coordinates), including the depot as customer 0
-customers = [(0, 0), (2, 4), (5, 6), (8, 8), (10, 10), (3, 7), (9, 3), (6, 4), (1, 9), (8, 2), (5, 9), (-1, -5), (-5, 4)]
-demands = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+"""Reading in Set Coordinates"""
+# Assuming the JSON data is saved in a file called 'coordinates.json'
+json_file = 'set_coordinates.json'
+customers, demands, time_windows = read_json_data(json_file)
+
+# # New set of customer locations (x, y coordinates), including the depot as customer 0
+# customers = [(0, 0), (2, 4), (5, 6), (8, 8), (10, 10), (3, 7), (9, 3), (6, 4), (1, 9), (8, 2), (5, 9), (-1, -5), (-5, 4)]
+# demands = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+# # Example time windows for each customer (start_time, end_time) and a service time
+# time_windows = [(0, 999)] + [(5, 15), (8, 18), (7, 16), (10, 20), (6, 13), (12, 18), (7, 15), (10, 19), (5, 12), (8, 16), (3, 4), (4, 15)]
+service_time = 0  # Assume 1 unit of time for service at each customer
 
 # Number of vehicles available
-num_vehicles = 4
+num_vehicles = 7
 # Vehicle capacity: Sets capacity of all vehicles
-vehicle_capacity = 17
+vehicle_capacity = 20
 # Define the new maximum travel distance
-max_distance = 35
-
-# Example time windows for each customer (start_time, end_time) and a service time
-time_windows = [(0, 999)] + [(5, 15), (8, 18), (7, 16), (10, 20), (6, 13), (12, 18), (7, 15), (10, 19), (5, 12), (8, 16), (3, 4), (4, 15)]
-service_time = 0.3  # Assume 1 unit of time for service at each customer
+max_distance = 10
 
 # Create distance matrix
-dist_matrix = calculate_distance_matrix(customers)
+dist_matrix = calculate_distance_matrix_2(customers)
 print(dist_matrix)
 
 multi_vehicle_routes_with_time_windows, vehicle_info, vehicle_arrival_info = greedy_vrp_solver_with_time_windows(

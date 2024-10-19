@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import math
+import json
 
 def calculate_distance_matrix(customers):
     n = len(customers)
@@ -267,24 +268,50 @@ def visualize_routes(customers, demands, routes, dist_matrix):
     # Show the plot
     plt.show()
 
-# New set of customer locations (x, y coordinates), including the depot as customer 0
-customers = [(0, 0), (2, 4), (5, 6), (8, 8), (10, 10), (3, 7), (9, 3), (6, 4), (1, 9), (8, 2), (5, 9), (-1, -5), (-5, 4)]
-# New customer demands (0 for the depot)
-# demands = [0, 4, 3, 7, 6, 2, 5, 3, 4, 2, 7, 2, 3]
-demands = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+def read_json_data(json_file):
+    """
+    Function to read customer, demand, and time window data from a JSON file.
+    """
+    with open(json_file, 'r') as file:
+        data = json.load(file)
+    
+    # Extracting the lists from the JSON data
+    customers = data.get("customers", [])
+    demands = data.get("demands", [])
+    time_windows = data.get("time_windows", [])
 
+    # Returning the structured data
+    return customers, demands, time_windows
+
+
+
+# """Manual Input Coordinates"""
+# # New set of customer locations (x, y coordinates), including the depot as customer 0
+# customers = [(0, 0), (2, 4), (5, 6), (8, 8), (10, 10), (3, 7), (9, 3), (6, 4), (1, 9), (8, 2), (5, 9), (-1, -5), (-5, 4)]
+# # New customer demands (0 for the depot)
+# # demands = [0, 4, 3, 7, 6, 2, 5, 3, 4, 2, 7, 2, 3]
+# demands = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+# # Example time windows for each customer (start_time, end_time) and a service time
+# time_windows = [(0, 999)] + [(5, 15), (8, 18), (7, 16), (10, 20), (6, 13), (12, 18), (7, 15), (10, 19), (5, 12), (8, 16), (3, 4), (4, 15)]
+
+service_time = 0  # Assume 1 unit of time for service at each customer
+
+"""Reading in Set Coordinates"""
+# Assuming the JSON data is saved in a file called 'coordinates.json'
+json_file = 'coordinates.json'
+customers, demands, time_windows = read_json_data(json_file)
+# # Print out the data from the json file
+# print("Customers:", customers)
+# print("Demands:", demands)
+# print("Time Windows:", time_windows)
+
+"""User Input""" #to be implemented
 # Number of vehicles available
-num_vehicles = 2
+num_vehicles = 7
 # Vehicle capacity: Sets capacity of all vehicles
-vehicle_capacity = 10
+vehicle_capacity = 20
 # Define the new maximum travel distance
-max_distance = 30
-
-# Example time windows for each customer (start_time, end_time) and a service time
-time_windows = [(0, 999)] + [(5, 15), (8, 18), (7, 16), (10, 20), (6, 13), (12, 18), (7, 15), (10, 19), (5, 12), (8, 16), (3, 4), (4, 15)]
-service_time = 0.3  # Assume 1 unit of time for service at each customer
-
-
+max_distance = 40
 
 # Create distance matrix
 dist_matrix = calculate_distance_matrix(customers)
