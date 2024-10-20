@@ -58,15 +58,20 @@ def calculate_distance_matrix_2(customers):
 
     return dist_matrix
 
-def greedy_cvrp_solver_multiple_vehicles(customers, vehicle_capacity, demands, dist_matrix, num_vehicles, max_distance, time_windows, service_times, depot=0):
+def greedy_algorithm(customers, vehicle_capacities, demands, num_vehicles, vehicle_max_distances, time_windows, service_times, depot=0):
     """
-    Greedy algorithm to solve the CVRP with multiple vehicles, max distance, and time windows.
+    Greedy algorithm to solve the CVRP with multiple vehicles, each with its own capacity and max distance, and time windows.
     """
     num_customers = len(customers)
     visited = [False] * num_customers  # Keep track of visited customers
     vehicle_routes = []  # Store routes for each vehicle
+    # Create distance matrix
+    dist_matrix = calculate_distance_matrix_2(customers)
 
     for vehicle_num in range(num_vehicles):
+        vehicle_capacity = vehicle_capacities[vehicle_num]
+        max_distance = vehicle_max_distances[vehicle_num]
+        
         vehicle_load = 0
         vehicle_distance = 0
         current_time = 0
@@ -119,35 +124,43 @@ def greedy_cvrp_solver_multiple_vehicles(customers, vehicle_capacity, demands, d
         if all(visited[1:]):  # All non-depot customers visited
             break
 
-    return vehicle_routes
+    return vehicle_routes, dist_matrix
 
-def is_feasible(routes, dist_matrix, max_distance, time_windows, service_times):
+
+def is_feasible(routes, dist_matrix, vehicle_capacities, vehicle_max_distances, time_windows, service_times):
     """
-    Check if the routes are feasible with respect to max travel distance and time windows.
+    Check if the routes are feasible with respect to vehicle-specific capacities, max travel distances, and time windows.
     Each customer has an associated service time.
     """
     for route_idx, route in enumerate(routes):
         vehicle_distance = 0
         current_time = 0
         current = route[0]  # Start at depot
-        
+        current_capacity = 0
+
+        # Get the specific capacity and max distance for the current vehicle
+        max_capacity = vehicle_capacities[route_idx]
+        max_distance = vehicle_max_distances[route_idx]
+
         for i in range(1, len(route) - 1):
             next_customer = route[i]
             dist = dist_matrix[current][next_customer]
             vehicle_distance += dist
+            current_capacity += demands[next_customer]
 
             # Check max travel distance constraint
             if vehicle_distance > max_distance:
                 print(f"Vehicle {route_idx + 1} exceeded max distance constraint at customer {next_customer}.")
                 return False  # Infeasible if the vehicle exceeds the maximum allowed distance
 
+            # Check capacity constraint
+            if current_capacity > max_capacity:
+                print(f"Vehicle {route_idx + 1} exceeded max capacity constraint at customer {next_customer}.")
+                return False  # Infeasible if the vehicle exceeds the max capacity
+
             # Calculate arrival time at the next customer
             arrival_time = current_time + dist
             start_time, end_time = time_windows[next_customer]
-
-            # Debugging print statements for time window checks
-            print(f"Vehicle {route_idx + 1} arriving at customer {next_customer} at time {arrival_time}.")
-            print(f"Customer {next_customer} time window: {start_time} to {end_time}.")
 
             # Check if arrival time is within time window
             if arrival_time > end_time:
@@ -159,7 +172,7 @@ def is_feasible(routes, dist_matrix, max_distance, time_windows, service_times):
                 print(f"Vehicle {route_idx + 1} waiting until {start_time} to service customer {next_customer}.")
 
             # Update the current time (after waiting, if necessary)
-            current_time = arrival_time + service_times # Add the service time
+            current_time = arrival_time + service_times  # Add the service time
             current = next_customer
 
         # Add distance to return to depot
@@ -171,6 +184,7 @@ def is_feasible(routes, dist_matrix, max_distance, time_windows, service_times):
             return False
 
     return True
+
 
 def reverse_segment_in_route(routes):
     """Reverse a segment of a route."""
@@ -209,10 +223,8 @@ def relocate_segment_between_routes(routes):
     return new_routes
 
 
-import random
-
-def generate_neighbor(routes, dist_matrix, demands, max_capacity):
-    """Generate a neighboring solution by swapping, reversing segments, or relocating a customer segment."""
+def generate_neighbor(routes):
+    """Generate a neighboring solution by swapping, reversing segments, or relocating a customer segment, with vehicle-specific constraints."""
     new_routes = [route[:] for route in routes]  # Deep copy of routes
 
     # Choose between different neighbor generation strategies
@@ -244,11 +256,10 @@ def generate_neighbor(routes, dist_matrix, demands, max_capacity):
 
     return new_routes
 
-
-def simulated_annealing_cvrp(
-    initial_routes, dist_matrix, demands, max_capacity , max_distance, time_windows, service_times,
-    initial_temp=20000 , cooling_rate=0.999, min_temp=0.01, max_iterations=1000):
-    """Simulated Annealing algorithm for CVRP with multiple vehicles, max distance, and time windows."""
+def simulated_annealing(
+    initial_routes, dist_matrix, demands, vehicle_capacities, vehicle_max_distances, time_windows, service_times,
+    initial_temp=20000, cooling_rate=0.999, min_temp=0.01, max_iterations=1000):
+    """Simulated Annealing algorithm for CVRP with vehicle-specific capacities, max distances, and time windows."""
     current_solution = initial_routes
     current_cost = calculate_total_distance(current_solution, dist_matrix)
     best_solution = current_solution
@@ -259,10 +270,10 @@ def simulated_annealing_cvrp(
 
     while temperature > min_temp and iterations < max_iterations:
         # Generate a neighboring solution
-        neighbor_solution = generate_neighbor(current_solution, dist_matrix, demands, max_capacity)
+        neighbor_solution = generate_neighbor(current_solution)
 
         # Check if the neighbor solution is feasible
-        if not is_feasible(neighbor_solution, dist_matrix, max_distance, time_windows, service_times):
+        if not is_feasible(neighbor_solution, dist_matrix, vehicle_capacities, vehicle_max_distances, time_windows, service_times):
             iterations += 1
             continue  # Skip if the neighbor solution is not feasible
 
@@ -315,8 +326,7 @@ def calculate_total_distance(routes, dist_matrix):
             total_distance += dist_matrix[route[i]][route[i + 1]]
     return total_distance
 
-# Add the information printing for each vehicle after Simulated Annealing
-def print_vehicle_info(customers, dist_matrix, best_solution, vehicle_capacity, max_distance, time_windows, service_time):
+def print_vehicle_info(customers, best_solution, vehicle_capacities, vehicle_max_distances, time_windows, service_time):
     # Calculate and store vehicle information
     vehicle_info = []  # [(distance_traveled, customers_visited)]
     vehicle_arrival_info = []  # [[(customer_idx, arrival_time, (start_time, end_time)), ...], ...]
@@ -327,6 +337,10 @@ def print_vehicle_info(customers, dist_matrix, best_solution, vehicle_capacity, 
         arrival_times = []  # Track arrival times for this vehicle
         current_time = 0
         current = route[0]
+
+        # Get the specific capacity and max distance for this vehicle
+        max_capacity = vehicle_capacities[idx]
+        max_distance = vehicle_max_distances[idx]
 
         for i in range(1, len(route) - 1):
             next_customer = route[i]
@@ -353,8 +367,10 @@ def print_vehicle_info(customers, dist_matrix, best_solution, vehicle_capacity, 
 
     # Print the distance traveled and number of customers visited for each vehicle
     for idx, (distance, customer_count) in enumerate(vehicle_info):
+        max_capacity = vehicle_capacities[idx]
+        max_distance = vehicle_max_distances[idx]
         print(f"Vehicle {idx + 1}:")
-        print(f" - Max Capacity: {vehicle_capacity}")
+        print(f" - Max Capacity: {max_capacity}")
         print(f" - Max Travel Distance: {max_distance}")
         print(f" - Distance traveled: {distance:.2f} units")
         print(f" - Customers visited: {customer_count}")
@@ -367,13 +383,12 @@ def print_vehicle_info(customers, dist_matrix, best_solution, vehicle_capacity, 
             print(f"   - Arrival time: {arrival_time:.2f}")
             print(f"   - Time window: {start_time} to {end_time}")
 
-
 def visualize_routes(customers, demands, routes, dist_matrix):
     customer_coords = np.array(customers)
     demands_array = np.array(demands)
 
     # Different colors for different vehicle routes
-    colors = ['g', 'b', 'm', 'c', 'y']  # Add more colors as needed
+    colors = ['tab:blue', 'tab:red', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan', 'k', 'b', 'g', 'r', 'c', 'm', 'y'] # Add more colors as needed
 
     # Plotting the customers and depot
     plt.figure(figsize=(8, 6))
@@ -402,20 +417,31 @@ def visualize_routes(customers, demands, routes, dist_matrix):
     # Show the plot
     plt.show()
 
-def read_json_data(json_file):
+def read_coordinate_data(filename):
     """
     Function to read customer, demand, and time window data from a JSON file.
     """
-    with open(json_file, 'r') as file:
-        data = json.load(file)
-    
-    # Extracting the lists from the JSON data
-    customers = data.get("customers", [])
-    demands = data.get("demands", [])
-    time_windows = data.get("time_windows", [])
+    try:
+        with open(filename, 'r') as file:
+            data = json.load(file)
+        
+        # Extracting the lists from the JSON data
+        customers = data.get("customers", [])
+        demands = data.get("demands", [])
+        time_windows = data.get("time_windows", [])
 
-    # Returning the structured data
-    return customers, demands, time_windows
+        # Returning the structured data
+        return customers, demands, time_windows
+
+    except FileNotFoundError:
+        print(f"File '{filename}' not found.")
+        return None
+    except json.JSONDecodeError:
+        print(f"Error parsing JSON from '{filename}'.")
+        return None
+    except ValueError as ve:
+        print(f"Error in data format: {ve}")
+        return None
 
 def calculate_distance(node1, node2, dist_matrix):
     """Return the distance between two nodes."""
@@ -473,6 +499,63 @@ def apply_3opt_all_routes(routes, dist_matrix):
         improved_routes.append(improved_route)
     return improved_routes
 
+def print_total_visited_customers(solution):
+    """Print the total number of unique customers visited by all vehicles in the solution."""
+    total_customers = 0
+    
+    # Iterate over each vehicle's route
+    for route in solution:
+        # Exclude depot (usually represented by 0) from the customer count
+        visited_customers = [customer for customer in route if customer != 0]
+        total_customers += len(visited_customers)
+    
+    print(f"Total customers visited by all vehicles: {total_customers}")
+    return total_customers
+
+def parse_vehicle_json(filename):
+    """
+    Parse the JSON file to extract the number of vehicles, their capacities, and maximum travel distances.
+    
+    Args:
+    filename (str): The path to the JSON file containing vehicle data.
+
+    Returns:
+    dict: A dictionary with parsed data for number of vehicles, capacities, and max distances.
+    """
+    try:
+        with open(filename, 'r') as f:
+            data = json.load(f)
+        
+        # Extract number of vehicles, capacities, and max distances
+        num_vehicles = int(data.get("num_vehicles", 0))
+        vehicle_capacities = data.get("vehicle_capacities", [])
+        vehicle_max_distances = data.get("vehicle_max_distances", [])
+        
+        # Check if the data is valid (lengths of capacities and distances must match num_vehicles)
+        if len(vehicle_capacities) != num_vehicles or len(vehicle_max_distances) != num_vehicles:
+            raise ValueError("The number of vehicles does not match the length of vehicle capacities or max distances.")
+        
+        return num_vehicles, vehicle_capacities, vehicle_max_distances
+
+    except FileNotFoundError:
+        print(f"File '{filename}' not found.")
+        return None
+    except json.JSONDecodeError:
+        print(f"Error parsing JSON from '{filename}'.")
+        return None
+    except ValueError as ve:
+        print(f"Error in data format: {ve}")
+        return None
+
+def run_greedy_algorithm(customers, vehicle_capacity, demands, num_vehicles, vehicle_max_distance, time_windows, service_time):
+    initial_routes, dist_matrix = greedy_algorithm(customers, vehicle_capacity, demands, num_vehicles, vehicle_max_distance, time_windows, service_time)
+    return initial_routes, dist_matrix
+
+def run_simulated_annealing(customers, num_vehicles, demands, vehicle_capacity, vehicle_max_distance, time_windows, service_time):
+    initial_routes, dist_matrix = greedy_algorithm(customers, vehicle_capacity, demands, num_vehicles, vehicle_max_distance, time_windows, service_time)
+    initial_routes_3opt = apply_3opt_all_routes(initial_routes, dist_matrix)
+    best_solution, best_cost = simulated_annealing(initial_routes_3opt, dist_matrix, demands, vehicle_capacity, vehicle_max_distance, time_windows, service_time)
+    return best_solution, best_cost, initial_routes, dist_matrix, initial_routes_3opt
 
 # """Manual Input Coordinates"""
 # # New set of customer locations (x, y coordinates), including the depot as customer 0
@@ -483,59 +566,101 @@ def apply_3opt_all_routes(routes, dist_matrix):
 # # Example time windows for each customer (start_time, end_time) and a service time
 # time_windows = [(0, 999)] + [(5, 15), (8, 18), (7, 16), (10, 20), (6, 13), (12, 18), (7, 15), (10, 19), (5, 12), (8, 16), (3, 4), (4, 15)]
 
-service_time = 0  # Assume 1 unit of time for service at each customer
+
 
 """Reading in Set Coordinates"""
 # Assuming the JSON data is saved in a file called 'coordinates.json'
-json_file = 'set_coordinates.json'
-customers, demands, time_windows = read_json_data(json_file)
+
 # # Print out the data from the json file
 # print("Customers:", customers)
 # print("Demands:", demands)
 # print("Time Windows:", time_windows)
 
 """User Input""" #to be implemented
-# Number of vehicles available
-num_vehicles = 10
-# Vehicle capacity: Sets capacity of all vehicles
-vehicle_capacity = 20
-# Define the new maximum travel distance
-max_distance = 40
+# # Number of vehicles available
+# num_vehicles = 5
+# # Vehicle capacity: Sets capacity of all vehicles
+# vehicle_capacity = 20
+# # Define the new maximum travel distance
+# max_distance = 60
 
-# Create distance matrix
-dist_matrix = calculate_distance_matrix_2(customers)
-print(dist_matrix)
+# # Example vehicle-specific capacities and distances
+# num_vehicles = 5
+# vehicle_capacity = [20, 25, 30, 22, 18]  # Specific capacity for each vehicle
+# vehicle_max_distance = [100, 120, 150, 90, 110]  # Specific max distance for each vehicle
 
-# Initial greedy solution (use your current greedy solution to generate routes, with max distance check)
-initial_routes = greedy_cvrp_solver_multiple_vehicles(customers, vehicle_capacity, demands, dist_matrix, num_vehicles, max_distance, time_windows, service_time)
+"""
+Streamlit app for user input such as:
+    - Number of vehicle 
+    - Capacity of each vehicle 
+    - Max Travel Distance of each vehicle
+    - (show recommended amount for each input)
+Streamlit app use case:
+    - User can select whether to use pre-set coordinates or generate random coordinates, or upload their own (via parser)
+    - User can first click to run the GA/Initial Solution
+    - User can then select through a drop down menu which optimization technique they'd like to use
+    - User can secondly click to run the optimization
+"""
 
-# Apply 3-opt local search to improve the initial greedy solution
-initial_routes_3opt = apply_3opt_all_routes(initial_routes, dist_matrix)
+"""
+A parser to parse in uploaded coordinates from user
+    - Will still work if there's only coordinates, no demands and no time window
+    - The parser will assume that the demand is 1 for all location
+    - The parser will assume that there's no time window if not specified
+"""
+
+# Read file from coordinates, generated by generator.py
+coordinates_file = 'set_coordinates.json'
+customers, demands, time_windows = read_coordinate_data(coordinates_file)
+
+# Read json from streamlit app user input
+vehicle_file = 'vehicle_data.json'
+num_vehicles, vehicle_capacity, vehicle_max_distance = parse_vehicle_json(vehicle_file)
+
+
+
+
+service_time = 0  # Assume 1 unit of time for service at each customer
+
+# # Initial greedy solution (use your current greedy solution to generate routes, with max distance check)
+# initial_routes, dist_matrix = run_greedy_algorithm(customers, vehicle_capacity, demands, num_vehicles, vehicle_max_distance, time_windows, service_time)
+
+# # Apply 3-opt local search to improve the initial greedy solution
+# initial_routes_3opt = apply_3opt_all_routes(initial_routes, dist_matrix)
+
+# # Run the simulated annealing algorithm
+# best_solution, best_cost = simulated_annealing(initial_routes, dist_matrix, demands, vehicle_capacities, vehicle_max_distances, time_windows, service_times)
+
+# Apply Simulated Annealing for CVRP with time windows and max distance
+best_solution, best_cost, initial_routes, dist_matrix, initial_routes_3opt = run_simulated_annealing(
+    customers, num_vehicles, demands, vehicle_capacity, vehicle_max_distance, time_windows, service_time
+)
 
 # Print improved routes after 3-opt
 print("Routes after 3-opt local search:")
 for route_idx, route in enumerate(initial_routes_3opt):
     print(f"Vehicle {route_idx + 1}: {route}")
 
-# Apply Simulated Annealing for CVRP with time windows and max distance
-best_solution, best_cost = simulated_annealing_cvrp(
-    initial_routes_3opt, dist_matrix, demands, vehicle_capacity, max_distance, time_windows, service_time
-)
-
-# Calculate total distance
-total_distance = calculate_total_distance(initial_routes, dist_matrix)
-print("Total Travel Distance of all Vehicle:", total_distance)
-print("Routes:", initial_routes)
+print("Greedy Algo/Initial Algo: ")
 # Print vehicle information (including arrival times and route details)
-print_vehicle_info(customers, dist_matrix, initial_routes, vehicle_capacity, max_distance, time_windows, service_time)
+print_vehicle_info(customers, initial_routes, vehicle_capacity, vehicle_max_distance, time_windows, service_time)
 # Visualize the best solution found
 visualize_routes(customers, demands, initial_routes, dist_matrix)
 
-# Calculate total distance
-total_distance = calculate_total_distance(best_solution, dist_matrix)
-print("Total Travel Distance of all Vehicle:", total_distance)
-print("Routes:", best_solution)
+print("Simulated Annealing: ")
 # Print vehicle information (including arrival times and route details)
-print_vehicle_info(customers, dist_matrix, best_solution, vehicle_capacity, max_distance, time_windows, service_time)
+print_vehicle_info(customers, best_solution, vehicle_capacity, vehicle_max_distance, time_windows, service_time)
 # Visualize the best solution found
 visualize_routes(customers, demands, best_solution, dist_matrix)
+
+print("Greedy Algo/Initial Algo: ")
+print_total_visited_customers(initial_routes)
+total_distance = calculate_total_distance(initial_routes, dist_matrix)
+print("Total Travel Distance of all Vehicle:", total_distance)
+print("Routes:", initial_routes)
+
+print("Simulated Annealing: ")
+print_total_visited_customers(best_solution)
+total_distance_2 = calculate_total_distance(best_solution, dist_matrix)
+print("Total Travel Distance of all Vehicle:", total_distance_2)
+print("Routes:", best_solution)
