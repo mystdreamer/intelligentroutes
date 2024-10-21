@@ -213,4 +213,3 @@ def generate_all(n_customers):
 # print(demands)
 # print("Time Windows:")
 # print(time_windows)
-
