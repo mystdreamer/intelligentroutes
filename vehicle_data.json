@@ -1,0 +1,17 @@
+{
+    "num_vehicles": 5,
+    "vehicle_capacities": [
+        15,
+        15,
+        15,
+        15,
+        15
+    ],
+    "vehicle_max_distances": [
+        35,
+        35,
+        35,
+        35,
+        35
+    ]
+}
