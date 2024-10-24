@@ -1,12 +1,12 @@
-
 from vehicle import Vehicle
 from distance import calculate_distance_matrix_2
 
 class GreedySolver:
     @staticmethod
-    def greedy_algorithm(customers, vehicle_capacities, demands, num_vehicles, vehicle_max_distances, time_windows, service_times, depot=0):
+    def greedy_algorithm(customers, vehicle_capacities, demands, num_vehicles, vehicle_max_distances, time_windows, service_times, depot=0, max_waiting_time=2):
         """
         Greedy algorithm to solve the CVRP with multiple vehicles, each with its own capacity and max distance, and time windows.
+        Vehicles will skip customers with time windows that are too far in the future (based on max_waiting_time).
         """
         num_customers = len(customers)
         visited = [False] * num_customers  # Keep track of visited customers
@@ -27,6 +27,7 @@ class GreedySolver:
             while True:
                 next_customer = None
                 min_dist = float('inf')
+                immediate_customer_found = False  # Track if a customer can be visited immediately
 
                 # Find the closest unvisited customer that fits in the vehicle's remaining capacity and respects the time window
                 for i in range(1, num_customers):  # Skip depot (i=0)
@@ -39,14 +40,20 @@ class GreedySolver:
                         start_time, end_time = time_windows[i]
 
                         # Check if the vehicle can arrive within the time window and max distance constraint
-                        if arrival_time <= end_time and vehicle_distance + dist_to_next + dist_to_depot <= max_distance:
-                            if arrival_time < start_time:
-                                # If arriving early, vehicle will wait until the start time
-                                arrival_time = start_time
-
-                            if dist_to_next < min_dist:
-                                min_dist = dist_to_next
-                                next_customer = i
+                        if vehicle_distance + dist_to_next + dist_to_depot <= max_distance:
+                            # Prioritize customers that can be visited immediately (no wait)
+                            if arrival_time >= start_time and arrival_time <= end_time:
+                                if dist_to_next < min_dist:
+                                    min_dist = dist_to_next
+                                    next_customer = i
+                                    immediate_customer_found = True
+                            # If the current customer requires waiting, only consider if no immediate customer is found
+                            elif not immediate_customer_found:
+                                waiting_time = start_time - arrival_time
+                                if 0 < waiting_time <= max_waiting_time:  # Consider if within allowed waiting time
+                                    if dist_to_next < min_dist:
+                                        min_dist = dist_to_next
+                                        next_customer = i
 
                 if next_customer is None:  # If no valid next customer, return to depot
                     break
@@ -71,4 +78,3 @@ class GreedySolver:
                 break
 
         return vehicle_routes, dist_matrix
-    
