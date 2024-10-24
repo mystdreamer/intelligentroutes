@@ -18,6 +18,25 @@ def print_total_visited_customers(solution):
 
     return total_customers
 
+def calculate_total_items_delivered(routes, demands):
+    """
+    Calculate the total amount of items delivered by all vehicles in the solution.
+    Args:
+    - routes: A list of vehicle routes (each route is a list of customer indices).
+    - demands: A list of demands for each customer (index 0 is the depot with demand 0).
+    
+    Returns:
+    - total_items_delivered: The total number of items delivered by all vehicles.
+    """
+    total_items_delivered = 0
+    
+    for route in routes:
+        # Exclude the depot (which is at index 0 in each route)
+        for customer in route[1:-1]:  # Skip the first (depot) and last (return to depot) indices
+            total_items_delivered += demands[customer]
+    
+    return total_items_delivered
+
 def print_vehicle_info(self, customers, best_solution, vehicle_capacities, vehicle_max_distances, time_windows, service_time):
     # Calculate and store vehicle information
     vehicle_info = []  # [(distance_traveled, customers_visited)]
@@ -220,94 +239,110 @@ def main():
 
     # Handle the user input for coordinates
     if coordinate_option == "Use Preset Coordinates":
-        # Reading coordinates file from set coordinate json
+        # Reading coordinates file from set coordinate json\
+
         coordinates_file = 'set_coordinates.json'
-        customers, demands, time_windows = read_coordinate_data(coordinates_file)
+        customers, demands, time_windows, customer_groups = read_coordinate_data(coordinates_file)
 
     elif coordinate_option == "Generate Random Coordinates":
         num_customers = st.number_input("Number of customers:", min_value=1, value=5, step=1)
+        total_demand = st.number_input("Total number of items:", min_value=1, value=10, step=1)
+
         if st.button("Generate Coordinates"):
-            generate_all(num_customers)  # Use the generator.py function
+            # Call the generate function with customer and demand details
+            generate_all(num_customers + 1, total_demand=total_demand)  # Update function call
             st.success("Random coordinates generated.")
-            # Reading the generated json file
+            # Read the generated json file
         coordinates_file = 'coordinates.json'
-        customers, demands, time_windows = read_coordinate_data(coordinates_file)
+        customers, demands, time_windows, customer_groups = read_coordinate_data(coordinates_file)
 
     elif coordinate_option == "Upload Custom Coordinates":
         uploaded_file = st.file_uploader("Upload a JSON file with coordinates", type=["json"])
         if uploaded_file is not None:
             try:
-                customers, demands, time_windows = parse_json_coordinates(uploaded_file)
+                customers, demands, time_windows, customer_groups = parse_json_coordinates(uploaded_file)
                 st.write("Customers:", customers)
                 st.write("Demands:", demands)
                 st.write("Time Windows:", time_windows)
+                st.write("Customer Groups:", customer_groups)
             except ValueError as e:
                 st.error(f"Error: {e}")
 
+    st.title("Initial Route")
     # Run initial solution (greedy algorithm)
     if st.button("Run Initial Solution (Greedy Algorithm)"):
         if customers:
             st.session_state['initial_routes'], st.session_state['dist_matrix'] = GreedySolver.greedy_algorithm(customers, vehicle_capacities, demands, num_vehicles, vehicle_max_distances, time_windows, service_time)
             st.success("Initial Solution executed.")
-            visualize_routes_st(customers, demands, st.session_state['initial_routes'], title="Greedy Algorithm Routes")
+            st.write("Numbers of customers: ", num_customers)
+            st.write("Numbers of items: ", total_demand)
+            visualize_routes_st(customers, customer_groups, demands, st.session_state['initial_routes'], title="Greedy Algorithm Routes")
             st.write("Total Visited Customers (Initial Solution):", print_total_visited_customers(st.session_state['initial_routes']))
+            st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
             st.write("Total Distance Traveled (Initial Solution):", calculate_total_distance(st.session_state['initial_routes'], st.session_state['dist_matrix']))
+            if st.session_state['initial_routes']:
+                st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
         else:
             st.error("No coordinates provided.")
 
     # Show additional information for initial solution
-    if st.session_state['initial_routes'] is not None:
-        if st.checkbox("Show Additional Information for Initial Solution"):
-            st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
-    # Dropdown menu for selecting optimization technique
-    st.title("Optimization Techniques")
-    optimization_option = st.selectbox(
-        "Choose an optimization technique:",
-        ("Simulated Annealing", "Ant Colony Optimization")
-    )
+    # # Dropdown menu for selecting optimization technique
+    # st.title("Optimization Techniques")
+    # optimization_option = st.selectbox(
+    #     "Choose an optimization technique:",
+    #     ("Simulated Annealing", "Ant Colony Optimization")
+    # )
 
+    st.title("Optimizate Route")
     # Run the selected optimization technique
-    if st.button("Run Optimization"):
-        if optimization_option == "Simulated Annealing":
+    if (st.session_state['initial_routes']):
+        if st.button("Run Optimization"):
+        # if optimization_option == "Simulated Annealing":
             sa_optimizer = SimulatedAnnealingOptimizer(st.session_state['initial_routes'], st.session_state['dist_matrix'], vehicle_capacities, vehicle_max_distances, demands, time_windows, service_times=0)
             st.session_state['best_solution'], best_cost = sa_optimizer.optimize()
 
             st.write("Simulated Annealing Solution Visualization:")
-            visualize_routes_st(customers, demands, st.session_state['best_solution'], title="Simulated Annealing Routes")
+            visualize_routes_st(customers, customer_groups, demands, st.session_state['best_solution'], title="Simulated Annealing Routes")
             st.write("Total Visited Customers (Optimized Solution):", print_total_visited_customers(st.session_state['best_solution']))
+            st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
             st.write("Total Distance Traveled (Optimized Solution):", calculate_total_distance(st.session_state['best_solution'], st.session_state['dist_matrix']))
-        elif optimization_option == "Ant Colony Optimization":
-            st.write("Unavailable")
-        else:
-            st.write("No optimization selected.")
+            if st.session_state['best_solution']:
+                    st.write("Vehicle Information (Optimized Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
+        # elif optimization_option == "Ant Colony Optimization":
+        #     st.write("Unavailable")
+        # else:
+        #     st.write("No optimization selected.")
 
     # Run the selected optimization technique
-    if st.button("Compare Results"):
-        if optimization_option == "Simulated Annealing":
+    if (st.session_state['best_solution']):
+        if st.button("Compare Results"):
+        # if optimization_option == "Simulated Annealing":  
             sa_optimizer = SimulatedAnnealingOptimizer(st.session_state['initial_routes'], st.session_state['dist_matrix'], vehicle_capacities, vehicle_max_distances, demands, time_windows, service_times=0)
             st.session_state['best_solution'], best_cost = sa_optimizer.optimize()
             if st.session_state['initial_routes'] and st.session_state['best_solution']:
                 st.write("Comparing Initial Solution and Optimized Solution")
-                visualize_two_routes_side_by_side(customers, demands, st.session_state['initial_routes'], st.session_state['best_solution'])
+                visualize_two_routes_side_by_side(customers, customer_groups, demands, st.session_state['initial_routes'], st.session_state['best_solution'])
                 st.write("Total Visited Customers (Initial Solution):", print_total_visited_customers(st.session_state['initial_routes']))
+                st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
                 st.write("Total Distance Traveled (Initial Solution):", calculate_total_distance(st.session_state['initial_routes'], st.session_state['dist_matrix']))
+                # Show additional information for initial solution
+                if st.session_state['initial_routes']:
+                    st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
                 st.write("Total Visited Customers (Optimized Solution):", print_total_visited_customers(st.session_state['best_solution']))
+                st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
                 st.write("Total Distance Traveled (Optimized Solution):", calculate_total_distance(st.session_state['best_solution'], st.session_state['dist_matrix']))
-        elif optimization_option == "Ant Colony Optimization":
-            st.write("Unavailable")
-        else:
-            st.write("No optimization selected.")
+                # Show additional information for optimized solution
+                if st.session_state['best_solution']:
+                    st.write("Vehicle Information (Optimized Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
 
-    # Display additional information for initial solution
-    if st.session_state['initial_routes'] is not None:
-        if st.checkbox("Show Additional Information for Initial Solution", key=1):
-            st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
+        # elif optimization_option == "Ant Colony Optimization":
+        #     st.write("Unavailable")
+        # else:
+        #     st.write("No optimization selected.")
 
-    # Show additional information for optimized solution
-    if st.session_state['best_solution'] is not None:
-        if st.checkbox("Show Additional Information for Optimized Solution", key=2):
-            st.write("Vehicle Information (Optimized Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
-
+    # # Display additional information for initial solution
+    # if st.session_state['initial_routes']:
+    #     st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
 
 if __name__ == "__main__":
     main()

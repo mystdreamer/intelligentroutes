@@ -99,8 +99,24 @@ def generate_customers(n_customers, bottom_left_corner, top_right_corner):
         customers.append([lat, lon])
     return customers
 
-def generate_demands(n_customers, min_demand=1, max_demand=1):
-    return [0] + [random.randint(min_demand, max_demand) for _ in range(n_customers - 1)]
+def generate_demands(n_customers, total_demand):
+    """
+    Distribute the total demand randomly across all customers, ensuring each customer has at least 1 demand.
+    The first customer (depot) always has a demand of 0.
+    """
+    # Step 1: Assign a minimum demand of 1 to all customers (excluding the depot)
+    demands = [0] + [1] * (n_customers - 1)  # Depot gets 0, every other customer gets at least 1
+
+    # Step 2: Calculate remaining demand after giving 1 to each customer
+    remaining_demand = total_demand - (n_customers - 1)
+
+    # Step 3: Randomly distribute the remaining demand among the customers (excluding the depot)
+    while remaining_demand > 0:
+        i = random.randint(1, n_customers - 1)  # Choose a random customer (excluding the depot)
+        demands[i] += 1
+        remaining_demand -= 1
+
+    return demands
 
 # # Time window generation with grouping
 # def generate_time_windows(n_customers):
@@ -166,43 +182,47 @@ def assign_time_windows(n_customers):
     return time_windows, customer_groups
 
 # Save the generated data to a JSON file
-def save_to_json(customers, demands, time_windows, file_name="coordinates.json"):
+def save_to_json(customers, demands, time_windows, customer_groups, file_name="coordinates.json"):
     data = {
         "customers": customers,
         "demands": demands,
         "time_windows": time_windows,
+        "customer_groups": customer_groups,
     }
     with open(file_name, 'w') as f:
         json.dump(data, f, indent=4)
     print(f"Data saved to {file_name}")
 
-def generate_all(n_customers):
+def generate_all(n_customers, total_demand):
     # Generate a set of customer locations (including the depot at index 0)
     depot = generate_depot()
     customers = [depot] + generate_customers(n_customers - 1, sw_corner, ne_corner)
 
     # Generate demands for the customers (0 for the depot)
-    demands = generate_demands(n_customers)
+    demands = generate_demands(n_customers, total_demand)
 
     # Assign time window groups for the customers
     time_windows, customer_groups = assign_time_windows(n_customers)
 
     # Save data to JSON
-    save_to_json(customers, demands, time_windows)  
+    save_to_json(customers, demands, time_windows, customer_groups)  
     
     return customers, demands, time_windows, customer_groups
 
 
 
 # # Generate a set of customer locations (including the depot at index 0)
-# n_customers = 200  # Including depot as customer 0
-# customers, demands, time_windows, customer_groups = generate_all(n_customers)
+# n_customers = 150  # Including depot as customer 0
+# total_demands = 200
+# customers, demands, time_windows, customer_groups = generate_all(n_customers, total_demands)
+
+# # Visualize groups on Matplotlib
+# visualize_groups_matplotlib(customers, customer_groups)
 
 # # Visualize routes
 # visualize_routes(customers, demands)
 
-# # Visualize groups on Matplotlib
-# visualize_groups_matplotlib(customers, customer_groups)
+
 
 # # Example usage with generated data
 # visualize_on_folium(customers, demands)
