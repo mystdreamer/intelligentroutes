@@ -23,7 +23,7 @@ def calculate_total_items_delivered(routes, demands):
     Calculate the total amount of items delivered by all vehicles in the solution.
     Args:
     - routes: A list of vehicle routes (each route is a list of customer indices).
-    - demands: A list of demands for each customer (index 0 is the depot with demand 0).
+    - demands: A list of demands for each customer (index 0 is the depot with demand 0)
     
     Returns:
     - total_items_delivered: The total number of items delivered by all vehicles.
@@ -240,13 +240,12 @@ def main():
     # Handle the user input for coordinates
     if coordinate_option == "Use Preset Coordinates":
         # Reading coordinates file from set coordinate json\
-
         coordinates_file = 'set_coordinates.json'
-        customers, demands, time_windows, customer_groups = read_coordinate_data(coordinates_file)
+        customers, demands, time_windows, customer_groups, num_customers, total_demand = read_coordinate_data(coordinates_file)
 
     elif coordinate_option == "Generate Random Coordinates":
-        num_customers = st.number_input("Number of customers:", min_value=1, value=5, step=1)
-        total_demand = st.number_input("Total number of items:", min_value=1, value=10, step=1)
+        total_demand = st.number_input("Total number of items:", min_value=10, value=10, step=1)
+        num_customers = st.number_input("Number of customers (items delivery locations):", min_value=1, max_value=total_demand, value=5, step=1)
 
         if st.button("Generate Coordinates"):
             # Call the generate function with customer and demand details
@@ -254,13 +253,14 @@ def main():
             st.success("Random coordinates generated.")
             # Read the generated json file
         coordinates_file = 'coordinates.json'
-        customers, demands, time_windows, customer_groups = read_coordinate_data(coordinates_file)
+        customers, demands, time_windows, customer_groups, num_customers, total_demand = read_coordinate_data(coordinates_file)
+
 
     elif coordinate_option == "Upload Custom Coordinates":
         uploaded_file = st.file_uploader("Upload a JSON file with coordinates", type=["json"])
         if uploaded_file is not None:
             try:
-                customers, demands, time_windows, customer_groups = parse_json_coordinates(uploaded_file)
+                customers, demands, time_windows, customer_groups, num_customers, total_demand = parse_json_coordinates(uploaded_file)
                 st.write("Customers:", customers)
                 st.write("Demands:", demands)
                 st.write("Time Windows:", time_windows)

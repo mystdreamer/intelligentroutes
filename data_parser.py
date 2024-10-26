@@ -14,9 +14,19 @@ def read_coordinate_data(filename):
         demands = data.get("demands", [])
         time_windows = data.get("time_windows", [])
         customer_groups = data.get("customer_groups", {i: 'ungrouped' for i in range(1, len(customers))})  # Default group
+        
+        if not customers:
+            raise ValueError("No customers data found in file.")
+        if not demands:
+            demands = [1]*len(customers)
+        if not time_windows:
+            time_windows=[(0,999)]*len(customers)
+            
+        num_customers = len(customers) - 1
+        total_demand = sum(demands[1:])
 
         # Returning the structured data
-        return customers, demands, time_windows, customer_groups
+        return customers, demands, time_windows, customer_groups, num_customers, total_demand
 
     except FileNotFoundError:
         print(f"File '{filename}' not found.")
@@ -113,8 +123,10 @@ def parse_json_coordinates(file):
         else:
             customer_groups = {i: 'ungrouped' for i in range(1, len(customers))}  # Default group as 'ungrouped'
 
+        num_customers = len(customers)-1
+        total_demand = sum(demands[1:])
 
-        return customers, demands, time_windows, customer_groups
+        return customers, demands, time_windows, customer_groups, num_customers, total_demand
 
     except json.JSONDecodeError:
         raise ValueError("Error decoding JSON file. Please make sure it's a valid JSON.")
