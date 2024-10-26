@@ -185,7 +185,7 @@ def main():
     st.sidebar.title("Vehicle Constraints Input")
 
     # Number of vehicles input in the sidebar
-    num_vehicles = st.sidebar.number_input("Enter the number of vehicles:", min_value=1, max_value=30, value=1, step=1)
+    num_vehicles = st.sidebar.number_input("Enter the number of vehicles:", min_value=1, max_value=10, value=1, step=1)
 
     # Initialize lists to store vehicle capacities and max distances
     vehicle_capacities = []
