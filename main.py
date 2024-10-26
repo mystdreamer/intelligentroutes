@@ -302,6 +302,8 @@ def main():
             st.session_state['best_solution'], best_cost = sa_optimizer.optimize()
 
             st.write("Simulated Annealing Solution Visualization:")
+            st.write("Numbers of customers: ", num_customers)
+            st.write("Numbers of items: ", total_demand)
             visualize_routes_st(customers, customer_groups, demands, st.session_state['best_solution'], title="Simulated Annealing Routes")
             st.write("Total Visited Customers (Optimized Solution):", print_total_visited_customers(st.session_state['best_solution']))
             st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
@@ -321,6 +323,8 @@ def main():
             st.session_state['best_solution'], best_cost = sa_optimizer.optimize()
             if st.session_state['initial_routes'] and st.session_state['best_solution']:
                 st.write("Comparing Initial Solution and Optimized Solution")
+                st.write("Numbers of customers: ", num_customers)
+                st.write("Numbers of items: ", total_demand)
                 visualize_two_routes_side_by_side(customers, customer_groups, demands, st.session_state['initial_routes'], st.session_state['best_solution'])
                 st.write("Total Visited Customers (Initial Solution):", print_total_visited_customers(st.session_state['initial_routes']))
                 st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
