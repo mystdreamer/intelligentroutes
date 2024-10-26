@@ -1,12 +1,12 @@
+import heapq
 from vehicle import Vehicle
 from distance import calculate_distance_matrix_2
 
 class GreedySolver:
     @staticmethod
-    def greedy_algorithm(customers, vehicle_capacities, demands, num_vehicles, vehicle_max_distances, time_windows, service_times, depot=0, max_waiting_time=2):
+    def greedy_algorithm(customers, vehicle_capacities, demands, num_vehicles, vehicle_max_distances, time_windows, service_times, depot=0):
         """
         Greedy algorithm to solve the CVRP with multiple vehicles, each with its own capacity and max distance, and time windows.
-        Vehicles will skip customers with time windows that are too far in the future (based on max_waiting_time).
         """
         num_customers = len(customers)
         visited = [False] * num_customers  # Keep track of visited customers
@@ -24,10 +24,11 @@ class GreedySolver:
             route = [depot]
             current = depot
 
+            # Priority queue to store feasible customers based on distance
+            pq = []
+
             while True:
                 next_customer = None
-                min_dist = float('inf')
-                immediate_customer_found = False  # Track if a customer can be visited immediately
 
                 # Find the closest unvisited customer that fits in the vehicle's remaining capacity and respects the time window
                 for i in range(1, num_customers):  # Skip depot (i=0)
@@ -39,34 +40,45 @@ class GreedySolver:
                         arrival_time = current_time + dist_to_next
                         start_time, end_time = time_windows[i]
 
-                        # Check if the vehicle can arrive within the time window and max distance constraint
-                        if vehicle_distance + dist_to_next + dist_to_depot <= max_distance:
-                            # Prioritize customers that can be visited immediately (no wait)
-                            if arrival_time >= start_time and arrival_time <= end_time:
-                                if dist_to_next < min_dist:
-                                    min_dist = dist_to_next
-                                    next_customer = i
-                                    immediate_customer_found = True
-                            # If the current customer requires waiting, only consider if no immediate customer is found
-                            elif not immediate_customer_found:
-                                waiting_time = start_time - arrival_time
-                                if 0 < waiting_time <= max_waiting_time:  # Consider if within allowed waiting time
-                                    if dist_to_next < min_dist:
-                                        min_dist = dist_to_next
-                                        next_customer = i
+                        # Allow waiting if arrival is earlier than the start time
+                        if arrival_time < start_time:
+                            waiting_time = start_time - arrival_time
+                            total_time = start_time + service_times
+                        else:
+                            waiting_time = 0
+                            total_time = arrival_time + service_times
 
-                if next_customer is None:  # If no valid next customer, return to depot
+                        # Check if the vehicle can arrive within the max distance constraint and within the time window
+                        if vehicle_distance + dist_to_next + dist_to_depot <= max_distance and total_time <= end_time:
+                            heapq.heappush(pq, (dist_to_next, i))  # Push customer with distance as priority
+
+                if not pq:  # If no valid next customer, return to depot
                     break
 
-                # Add the customer to the route
-                route.append(next_customer)
-                visited[next_customer] = True
-                vehicle_load += demands[next_customer]
-                vehicle_distance += min_dist
+                # Get the next customer from the priority queue
+                _, next_customer = heapq.heappop(pq)
 
-                # Update the current time (including waiting time if arrived early)
-                current_time = max(current_time + min_dist, time_windows[next_customer][0]) + service_times
-                current = next_customer
+                # Verify that adding this customer still respects all constraints
+                dist_to_next = dist_matrix[current][next_customer]
+                dist_to_depot = dist_matrix[next_customer][depot]
+                arrival_time = current_time + dist_to_next
+                start_time, end_time = time_windows[next_customer]
+
+                # Allow waiting time if necessary
+                if arrival_time < start_time:
+                    current_time = start_time + service_times
+                else:
+                    current_time = arrival_time + service_times
+
+                if (vehicle_load + demands[next_customer] <= vehicle_capacity and
+                        vehicle_distance + dist_to_next + dist_to_depot <= max_distance and
+                        current_time <= end_time):
+                    # Add the customer to the route
+                    route.append(next_customer)
+                    visited[next_customer] = True
+                    vehicle_load += demands[next_customer]
+                    vehicle_distance += dist_to_next
+                    current = next_customer
 
             # Return to depot and finish the route
             vehicle_distance += dist_matrix[current][depot]  # Add return to depot distance

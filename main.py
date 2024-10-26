@@ -244,7 +244,7 @@ def main():
         customers, demands, time_windows, customer_groups, num_customers, total_demand = read_coordinate_data(coordinates_file)
 
     elif coordinate_option == "Generate Random Coordinates":
-        total_demand = st.number_input("Total number of items:", min_value=10, value=10, step=1)
+        total_demand = st.number_input("Total number of items:", min_value=10, value=50, step=1)
         num_customers = st.number_input("Number of customers (items delivery locations):", min_value=1, max_value=total_demand, value=5, step=1)
 
         if st.button("Generate Coordinates"):
