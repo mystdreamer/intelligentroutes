@@ -160,7 +160,6 @@ def assign_time_windows(n_customers):
         'morning': (5, 12),
         'afternoon': (12, 17),
         'evening': (17, 22),
-        'night': (22, 5)
     }
 
     group_names = list(groups.keys())
@@ -176,8 +175,6 @@ def assign_time_windows(n_customers):
             time_windows.append(groups['afternoon'])
         elif group_choice == 'evening':
             time_windows.append(groups['evening'])
-        elif group_choice == 'night':
-            time_windows.append(groups['night'])
 
     return time_windows, customer_groups
 
