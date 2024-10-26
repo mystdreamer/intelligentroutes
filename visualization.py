@@ -42,10 +42,9 @@ def visualize_routes_st(customers, customer_groups, demands, routes, title):
     # Different colors for different vehicle routes
     colors = ['tab:blue', 'tab:red', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:olive', 'tab:cyan', 'k', 'b', 'g', 'r', 'c', 'm', 'y'] # Add more colors as needed
     coord_colors = {
-        'morning': 'yellow',
-        'afternoon': 'blue',
-        'evening': 'green',
-        'night': 'purple',
+        'morning': 'blue',
+        'afternoon': 'yellow',
+        'evening': 'purple',
         'ungrouped': 'magenta'
     }
     plt.figure(figsize=(16, 12))
@@ -101,7 +100,6 @@ def visualize_two_routes_side_by_side(customers, customer_groups, demands, route
         'morning': 'yellow',
         'afternoon': 'blue',
         'evening': 'green',
-        'night': 'purple',
         'ungrouped': 'magenta'
     }
     # First plot in the first column

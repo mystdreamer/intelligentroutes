@@ -94,15 +94,16 @@ def print_vehicle_info(self, customers, best_solution, vehicle_capacities, vehic
             print(f"   - Arrival time: {arrival_time:.2f}")
             print(f"   - Time window: {start_time} to {end_time}")
 
-def print_vehicle_info_st(customers, dist_matrix, best_solution, vehicle_capacities, vehicle_max_distances, time_windows, service_time):
+def print_vehicle_info_st(customers, dist_matrix, best_solution, vehicle_capacities, vehicle_max_distances, time_windows, service_time, demands):
     # Calculate and store vehicle information
-    vehicle_info = []  # [(distance_traveled, customers_visited)]
+    vehicle_info = []  # [(distance_traveled, customers_visited, items_delivered)]
     vehicle_arrival_info = []  # [[(customer_idx, arrival_time, (start_time, end_time)), ...], ...]
     vehicle_output = []  # Store the output to return instead of printing it
 
     for idx, route in enumerate(best_solution):
         vehicle_distance = 0
         customer_count = 0
+        items_delivered = 0
         arrival_times = []  # Track arrival times for this vehicle
         current_time = 0
         current = route[0]
@@ -126,12 +127,13 @@ def print_vehicle_info_st(customers, dist_matrix, best_solution, vehicle_capacit
             arrival_times.append((next_customer, current_time, (start_time, end_time)))
             current = next_customer
             customer_count += 1
+            items_delivered += demands[next_customer]  # Increment items delivered by customer's demand
         
         # Add distance back to depot
         vehicle_distance += dist_matrix[current][route[-1]]
         
-        # Store vehicle distance and customer count info
-        vehicle_info.append((vehicle_distance, customer_count))
+        # Store vehicle distance, customer count, and items delivered info
+        vehicle_info.append((vehicle_distance, customer_count, items_delivered))
         vehicle_arrival_info.append(arrival_times)
 
         # Prepare vehicle output for Streamlit
@@ -140,6 +142,7 @@ def print_vehicle_info_st(customers, dist_matrix, best_solution, vehicle_capacit
         vehicle_output.append(f" - Max Travel Distance: {max_distance}")
         vehicle_output.append(f" - Distance traveled: {vehicle_distance:.2f} units")
         vehicle_output.append(f" - Customers visited: {customer_count}")
+        vehicle_output.append(f" - Items delivered: {items_delivered}")
         vehicle_output.append(" - Arrival details:")
 
         # Retrieve the arrival info for this vehicle
@@ -244,8 +247,8 @@ def main():
         customers, demands, time_windows, customer_groups, num_customers, total_demand = read_coordinate_data(coordinates_file)
 
     elif coordinate_option == "Generate Random Coordinates":
-        total_demand = st.number_input("Total number of items:", min_value=10, value=10, step=1)
-        num_customers = st.number_input("Number of customers (items delivery locations):", min_value=1, max_value=total_demand, value=5, step=1)
+        total_demand = st.number_input("Total number of items:", min_value=20, value=50, step=1)
+        num_customers = st.number_input("Number of customers (items delivery locations):", min_value=15, max_value=total_demand, value=50, step=1)
 
         if st.button("Generate Coordinates"):
             # Call the generate function with customer and demand details
@@ -281,7 +284,7 @@ def main():
             st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
             st.write("Total Distance Traveled (Initial Solution):", calculate_total_distance(st.session_state['initial_routes'], st.session_state['dist_matrix']))
             if st.session_state['initial_routes']:
-                st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
+                st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time, demands))
         else:
             st.error("No coordinates provided.")
 
@@ -309,7 +312,7 @@ def main():
             st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
             st.write("Total Distance Traveled (Optimized Solution):", calculate_total_distance(st.session_state['best_solution'], st.session_state['dist_matrix']))
             if st.session_state['best_solution']:
-                    st.write("Vehicle Information (Optimized Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
+                    st.write("Vehicle Information (Optimized Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time, demands))
         # elif optimization_option == "Ant Colony Optimization":
         #     st.write("Unavailable")
         # else:
@@ -331,13 +334,13 @@ def main():
                 st.write("Total Distance Traveled (Initial Solution):", calculate_total_distance(st.session_state['initial_routes'], st.session_state['dist_matrix']))
                 # Show additional information for initial solution
                 if st.session_state['initial_routes']:
-                    st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
+                    st.write("Vehicle Information (Initial Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time, demands))
                 st.write("Total Visited Customers (Optimized Solution):", print_total_visited_customers(st.session_state['best_solution']))
                 st.write("Total Item Delivered (Initial Solution):", calculate_total_items_delivered(st.session_state['initial_routes'], demands))
                 st.write("Total Distance Traveled (Optimized Solution):", calculate_total_distance(st.session_state['best_solution'], st.session_state['dist_matrix']))
                 # Show additional information for optimized solution
                 if st.session_state['best_solution']:
-                    st.write("Vehicle Information (Optimized Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time))
+                    st.write("Vehicle Information (Optimized Solution):", print_vehicle_info_st(customers, st.session_state['dist_matrix'], st.session_state['initial_routes'], vehicle_capacities, vehicle_max_distances, time_windows, service_time, demands))
 
         # elif optimization_option == "Ant Colony Optimization":
         #     st.write("Unavailable")
