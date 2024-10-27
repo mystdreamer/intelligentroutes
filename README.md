@@ -118,3 +118,13 @@ streamlit run main.py
 - Json: For handling JSON input and output.
 
 ---
+
+## Contributing
+Contributions to the project are welcome! Please fork the repository, make your changes, and submit a pull request.
+
+---
+
+## License
+This project is licensed under the MIT License.
+
+---
