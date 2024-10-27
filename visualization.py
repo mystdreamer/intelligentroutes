@@ -97,9 +97,9 @@ def visualize_two_routes_side_by_side(customers, customer_groups, demands, route
     # Different colors for different vehicle routes
     colors = ['tab:blue', 'tab:red', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:olive', 'tab:cyan', 'k', 'b', 'g', 'r', 'c', 'm', 'y'] # Add more colors as needed
     coord_colors = {
-        'morning': 'yellow',
-        'afternoon': 'blue',
-        'evening': 'green',
+        'morning': 'blue',
+        'afternoon': 'yellow',
+        'evening': 'purple',
         'ungrouped': 'magenta'
     }
     # First plot in the first column
