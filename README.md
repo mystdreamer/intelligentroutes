@@ -39,7 +39,7 @@ git clone https://github.com/yourusername/vehicle-routing-optimization.git
 cd vehicle-routing-optimization
 ```
 
-### 3. Environment Setup
+### 2. Environment Setup
 Note: If using Visual studio code on mac, ensure your terminal is a command interpreter shell like bash and not zsh.
 
 Create and activate virtual environment:
@@ -47,7 +47,7 @@ Create and activate virtual environment:
 python -m venv venv
 ```
 
-### 2. Install Required Packages
+### 3. Install Required Packages
 Install all required packages using pip:
 ```bash
 pip install -r requirements.txt
