@@ -188,7 +188,7 @@ def main():
     st.sidebar.title("Vehicle Constraints Input")
 
     # Number of vehicles input in the sidebar
-    num_vehicles = st.sidebar.number_input("Enter the number of vehicles:", min_value=1, max_value=10, value=1, step=1)
+    num_vehicles = st.sidebar.number_input("Enter the number of vehicles:", min_value=1, max_value=30, value=1, step=1)
 
     # Initialize lists to store vehicle capacities and max distances
     vehicle_capacities = []
@@ -247,8 +247,8 @@ def main():
         customers, demands, time_windows, customer_groups, num_customers, total_demand = read_coordinate_data(coordinates_file)
 
     elif coordinate_option == "Generate Random Coordinates":
-        total_demand = st.number_input("Total number of items:", min_value=20, value=50, step=1)
-        num_customers = st.number_input("Number of customers (items delivery locations):", min_value=15, max_value=total_demand, value=50, step=1)
+        total_demand = st.number_input("Total number of items:", min_value=5, value=10, step=1)
+        num_customers = st.number_input("Number of customers (items delivery locations):", min_value=5, max_value=total_demand, value=10, step=1)
 
         if st.button("Generate Coordinates"):
             # Call the generate function with customer and demand details
