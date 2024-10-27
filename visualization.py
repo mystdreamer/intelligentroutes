@@ -105,7 +105,7 @@ def visualize_two_routes_side_by_side(customers, customer_groups, demands, route
     # First plot in the first column
     with col1:
         # Plotting the customers and depot
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(16, 12))
 
         # Plotting the depot and demand ring
         plt.scatter(customer_coords[0, 0], customer_coords[0, 1], s=300, c='r', label='Depot', edgecolor='black')
@@ -149,7 +149,7 @@ def visualize_two_routes_side_by_side(customers, customer_groups, demands, route
     # Second plot in the second column
     with col2:
         # Plotting the customers and depot
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(16, 12))
         # Plotting the depot and demand ring
         plt.scatter(customer_coords[0, 0], customer_coords[0, 1], s=300, c='r', label='Depot', edgecolor='black')
         plt.scatter(customer_coords[:, 0], customer_coords[:, 1], s=demands_array * 100, c='tab:gray', alpha=0.5, label='Item Amount')
