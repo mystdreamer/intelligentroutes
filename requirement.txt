@@ -1,0 +1,7 @@
+streamlit
+folium
+numpy
+matplotlib
+random
+json
+math
