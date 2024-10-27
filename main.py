@@ -296,7 +296,7 @@ def main():
     #     ("Simulated Annealing", "Ant Colony Optimization")
     # )
 
-    st.title("Optimizate Route")
+    st.title("Optimize Route")
     # Run the selected optimization technique
     if (st.session_state['initial_routes']):
         if st.button("Run Optimization"):
